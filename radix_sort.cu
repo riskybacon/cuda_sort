@@ -755,8 +755,17 @@ void sort_entry(
     checkCudaErrors(cudaMemcpy(d_mem, h_mem, mem_size, cudaMemcpyDefault));
 
     // Run the sort
-    your_sort(d_input_val, d_input_pos, d_output_val, d_output_pos, d_size,
-              num_bits, threads_per_block);
+    float time;
+    cudaEvent_t start, stop;
+    checkCudaErrors(cudaEventCreate(&start));
+    checkCudaErrors(cudaEventCreate(&stop));
+    checkCudaErrors(cudaEventRecord(start, 0));
+    radix_sort(d_input_val, d_input_pos, d_output_val, d_output_pos, d_size,
+               num_bits, threads_per_block);
+    checkCudaErrors(cudaEventRecord(stop, 0));
+    checkCudaErrors(cudaEventSynchronize(stop));
+    checkCudaErrors(cudaEventElapsedTime(&time, start, stop));
+    printf("Time to sort:  %3.1f ms \n", time);
 
     // Copy values from device to host
     checkCudaErrors(cudaMemcpy(h_mem, d_mem, mem_size, cudaMemcpyDefault));
